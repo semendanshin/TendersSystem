@@ -40,8 +40,8 @@ func (s *Server) Start() error {
 	tenderHandler := handlers.NewTenderHandler(s.tenderUseCase)
 	tenderHandler.Register(g)
 
-	//bidHandler := handlers.NewBidHandler(s.bidsUseCase)
-	//bidHandler.Register(s.e)
+	bidHandler := handlers.NewBidHandler(s.bidsUseCase)
+	bidHandler.Register(g)
 
 	s.e.Use(middleware.Logger())
 	//s.e.Use(middleware.Recover())

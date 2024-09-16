@@ -284,7 +284,7 @@ func (b *BidUseCase) checkTenderDecision(ctx context.Context, tender models.Tend
 	return nil
 }
 
-func (b *BidUseCase) SubmitDecision(ctx context.Context, id models.ID, username string, decision bool) (models.Bid, error) {
+func (b *BidUseCase) SubmitDecision(ctx context.Context, id models.ID, username string, decision models.BidDecisionType) (models.Bid, error) {
 	// Get data
 	u, err := b.employeeRepo.GetByUsername(ctx, username)
 	if err != nil {
@@ -312,15 +312,7 @@ func (b *BidUseCase) SubmitDecision(ctx context.Context, id models.ID, username 
 		return models.Bid{}, err
 	}
 
-	// Create
-	var decisionType models.BidDecisionType
-	if decision {
-		decisionType = models.BidDecisionTypeApproved
-	} else {
-		decisionType = models.BidDecisionTypeRejected
-	}
-
-	decisionModel := models.NewBidDecision(bid.ID, u.ID, decisionType)
+	decisionModel := models.NewBidDecision(bid.ID, u.ID, decision)
 
 	_, err = b.bidDecisionRepo.Create(ctx, &decisionModel)
 	if err != nil {
@@ -328,7 +320,7 @@ func (b *BidUseCase) SubmitDecision(ctx context.Context, id models.ID, username 
 	}
 
 	// Check if all decisions are made
-	err = b.checkTenderDecision(ctx, tender, bid, decisionType)
+	err = b.checkTenderDecision(ctx, tender, bid, decision)
 	if err != nil {
 		return models.Bid{}, err
 	}

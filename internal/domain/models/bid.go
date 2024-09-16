@@ -113,6 +113,21 @@ const (
 	BidDecisionTypeRejected BidDecisionType = "rejected"
 )
 
+func (b BidDecisionType) String() string {
+	return string(b)
+}
+
+func NewBidDecisionType(b string) (BidDecisionType, error) {
+	switch b {
+	case "approved":
+		return BidDecisionTypeApproved, nil
+	case "rejected":
+		return BidDecisionTypeRejected, nil
+	default:
+		return BidDecisionTypeUnknown, fmt.Errorf("unknown bid decision type: %s", domain.ErrInvalidArgument)
+	}
+}
+
 type BidDecision struct {
 	ID         ID
 	BidID      ID

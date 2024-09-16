@@ -13,7 +13,7 @@ type BidUseCaseInterface interface {
 	GetStatus(ctx context.Context, id models.ID, username string) (models.BidStatus, error)
 	SetStatus(ctx context.Context, id models.ID, username string, status models.BidStatus) (models.Bid, error)
 	Update(ctx context.Context, id models.ID, username string, data *dto.UpdateBidDTO) (models.Bid, error)
-	SubmitDecision(ctx context.Context, id models.ID, username string, decision bool) (models.Bid, error)
+	SubmitDecision(ctx context.Context, id models.ID, username string, decision models.BidDecisionType) (models.Bid, error)
 	LeaveFeedback(ctx context.Context, id models.ID, username string, feedback string) (models.Bid, error)
 	Rollback(ctx context.Context, id models.ID, username string, version int) (models.Bid, error)
 	GetAuthorsFeedback(ctx context.Context, id models.ID, requesterUsername, authorUsername string, options ...PaginationOptFunc) ([]models.BidFeedback, error)
