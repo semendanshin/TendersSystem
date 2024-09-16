@@ -1,0 +1,16 @@
+services:
+  server:
+    container_name: post_api
+    build:
+      context: ../
+      dockerfile: docker/DockerfileApp
+      target: final
+    environment:
+      - CONFIG_PATH=/config/docker-config.yaml
+    volumes:
+      - ../config:/config
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy

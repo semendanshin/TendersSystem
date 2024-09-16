@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:15
+    container_name: awesome_db
+    restart: unless-stopped
+    volumes:
+      - tenders_postgres_data:/var/lib/postgresql/data/
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    ports:
+      - "5430:5432"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  tenders_postgres_data:
