@@ -28,7 +28,7 @@ func NewTenderStatus(t string) (TenderStatus, error) {
 	case "closed":
 		return TenderStatusClosed, nil
 	default:
-		return TenderStatusUnknown, fmt.Errorf("unknown tender status: %s", domain.ErrInvalidArgument)
+		return TenderStatusUnknown, fmt.Errorf("unknown tender status: %w", domain.ErrInvalidArgument)
 	}
 }
 
@@ -54,7 +54,7 @@ func NewTenderType(t string) (TenderType, error) {
 	case "manufacture":
 		return TenderTypeManufacture, nil
 	default:
-		return TenderTypeUnknown, fmt.Errorf("unknown tender type: %s", domain.ErrInvalidArgument)
+		return TenderTypeUnknown, fmt.Errorf("unknown tender type: %w", domain.ErrInvalidArgument)
 	}
 }
 

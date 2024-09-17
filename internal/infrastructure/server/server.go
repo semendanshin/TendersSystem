@@ -2,9 +2,10 @@ package server
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"tenderSystem/internal/abstraction"
 	"tenderSystem/internal/infrastructure/server/handlers"
+	"tenderSystem/internal/infrastructure/server/middleware"
 )
 
 type Server struct {
@@ -43,8 +44,9 @@ func (s *Server) Start() error {
 	bidHandler := handlers.NewBidHandler(s.bidsUseCase)
 	bidHandler.Register(g)
 
-	s.e.Use(middleware.Logger())
-	//s.e.Use(middleware.Recover())
+	s.e.Use(echoMiddleware.Logger())
+	s.e.Use(middleware.NewErrorMiddleware())
+	s.e.Use(echoMiddleware.Recover())
 
 	return s.e.Start(s.host + ":" + s.port)
 }

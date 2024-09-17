@@ -30,7 +30,7 @@ func NewOrganizationType(o string) (OrganizationType, error) {
 	case "JSC":
 		return OrganizationTypeJointStockCompany, nil
 	default:
-		return OrganizationTypeUnknown, fmt.Errorf("unknown organization type: %s", domain.ErrInvalidArgument)
+		return OrganizationTypeUnknown, fmt.Errorf("unknown organization type: %w", domain.ErrInvalidArgument)
 	}
 }
 
@@ -43,7 +43,7 @@ func (i ID) String() string {
 func ParseID(i string) (ID, error) {
 	id, err := uuid.Parse(i)
 	if err != nil {
-		return ID{}, fmt.Errorf("invalid ID: %s", domain.ErrInvalidArgument)
+		return ID{}, fmt.Errorf("invalid ID: %w", domain.ErrInvalidArgument)
 	}
 
 	return ID(id), nil

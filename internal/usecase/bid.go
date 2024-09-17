@@ -40,7 +40,7 @@ func NewBidUseCase(
 func (b *BidUseCase) checkUserIsBidsAuthor(ctx context.Context, bid models.Bid, u models.Employee) error {
 	if bid.AuthorType == models.BidAuthorTypeUser {
 		if bid.AuthorID != u.ID {
-			return fmt.Errorf("user %s is not the author of bid %s:%w", u.Username, bid.ID, domain.ErrForbidden)
+			return fmt.Errorf("user %s is not the author of bid %s: %w", u.Username, bid.ID, domain.ErrForbidden)
 		}
 
 		return nil
@@ -53,13 +53,13 @@ func (b *BidUseCase) checkUserIsBidsAuthor(ctx context.Context, bid models.Bid, 
 		}
 
 		if bid.AuthorID != organization.ID {
-			return fmt.Errorf("organization %s is not the author of bid %s:%w", u.Username, bid.ID, domain.ErrForbidden)
+			return fmt.Errorf("organization %s is not the author of bid %s: %w", u.Username, bid.ID, domain.ErrForbidden)
 		}
 
 		return nil
 	}
 
-	return fmt.Errorf("unknown author type %s:%w", bid.AuthorType, domain.ErrInternal)
+	return fmt.Errorf("unknown author type %s: %w", bid.AuthorType, domain.ErrInternal)
 }
 
 func (b *BidUseCase) checkUserHasAccess(ctx context.Context, bid models.Bid, u models.Employee) error {
@@ -119,7 +119,7 @@ func (b *BidUseCase) GetByTenderID(ctx context.Context, tenderID models.ID, user
 	}
 
 	if tender.OrganizationID != o.ID {
-		return nil, fmt.Errorf("organization %s is not the author of tender %s:%w", username, tenderID, domain.ErrForbidden)
+		return nil, fmt.Errorf("organization %s is not the author of tender %s: %w", username, tenderID, domain.ErrForbidden)
 	}
 
 	bids, err := b.bidRepo.GetByTenderID(ctx, tenderID, options...)
@@ -232,15 +232,15 @@ func (b *BidUseCase) getQuorum(ctx context.Context, tenderID models.ID) (int, er
 
 func validateSubmitDecision(tender models.Tender, bid models.Bid, userOrganization models.Organization) error {
 	if tender.Status != models.TenderStatusPublished {
-		return fmt.Errorf("tender %s is not published:%w", tender.ID, domain.ErrInvalidArgument)
+		return fmt.Errorf("tender %s is not published: %w", tender.ID, domain.ErrInvalidArgument)
 	}
 
 	if bid.Status != models.BidStatusPublished {
-		return fmt.Errorf("bid %s is not published", bid.ID)
+		return fmt.Errorf("bid %s is not published: %w", bid.ID, domain.ErrInvalidArgument)
 	}
 
 	if tender.OrganizationID != userOrganization.ID {
-		return fmt.Errorf("organization %s is not the author of tender %s:%w", userOrganization.Name, tender.ID, domain.ErrForbidden)
+		return fmt.Errorf("organization %s is not the author of tender %s: %w", userOrganization.Name, tender.ID, domain.ErrForbidden)
 	}
 
 	return nil
@@ -350,7 +350,7 @@ func (b *BidUseCase) LeaveFeedback(ctx context.Context, bidID models.ID, usernam
 	}
 
 	if tender.OrganizationID != o.ID {
-		return models.Bid{}, fmt.Errorf("organization %s is not the author of tender %s:%w", username, tender.ID, domain.ErrForbidden)
+		return models.Bid{}, fmt.Errorf("organization %s is not the author of tender %s: %w", username, tender.ID, domain.ErrForbidden)
 	}
 
 	feedbackModel := models.NewBidFeedback(bidID, feedback, u.ID)
@@ -403,7 +403,7 @@ func (b *BidUseCase) validateGetAuthorsFeedback(ctx context.Context, tenderID mo
 	}
 
 	if tender.OrganizationID != requesterOrganization.ID {
-		return fmt.Errorf("organization %s is not the author of tender %s:%w", requesterUsername, tenderID, domain.ErrForbidden)
+		return fmt.Errorf("organization %s is not the author of tender %s: %w", requesterUsername, tenderID, domain.ErrForbidden)
 	}
 
 	author, err := b.employeeRepo.GetByUsername(ctx, authorUsername)
@@ -429,7 +429,7 @@ func (b *BidUseCase) validateGetAuthorsFeedback(ctx context.Context, tenderID mo
 	}
 
 	if len(authorBids) == 0 {
-		return fmt.Errorf("author %s has no bids in tender %s:%w", authorUsername, tenderID, domain.ErrNotFound)
+		return fmt.Errorf("author %s has no bids in tender %s: %w", authorUsername, tenderID, domain.ErrNotFound)
 	}
 
 	var matched bool
@@ -449,7 +449,7 @@ func (b *BidUseCase) validateGetAuthorsFeedback(ctx context.Context, tenderID mo
 	}
 
 	if !matched {
-		return fmt.Errorf("author %s has no bids in tender %s:%w", authorUsername, tenderID, domain.ErrNotFound)
+		return fmt.Errorf("author %s has no bids in tender %s: %w", authorUsername, tenderID, domain.ErrNotFound)
 	}
 
 	return nil
