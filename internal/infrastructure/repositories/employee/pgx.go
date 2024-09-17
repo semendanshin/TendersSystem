@@ -2,9 +2,11 @@ package employee
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"tenderSystem/internal/abstraction"
+	"tenderSystem/internal/domain"
 	"tenderSystem/internal/domain/models"
 )
 
@@ -32,7 +34,10 @@ func (P *PGXRepository) GetByUsername(ctx context.Context, username string) (mod
 	var employee models.Employee
 	err := row.Scan(&employee.ID, &employee.Username, &employee.FirstName, &employee.LastName, &employee.CreatedAt, &employee.UpdatedAt)
 	if err != nil {
-		return models.Employee{}, fmt.Errorf("error getting employee by username: %w", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Employee{}, fmt.Errorf("employee not found: %w", domain.ErrNotFound)
+		}
+		return models.Employee{}, fmt.Errorf("error getting employee %s by username: %w", username, err)
 	}
 
 	return employee, nil
@@ -53,6 +58,9 @@ func (P *PGXRepository) GetOrganization(ctx context.Context, userID models.ID) (
 
 	err := row.Scan(&organization.ID, &organization.Name, &description, &organization.Type, &organization.CreatedAt, &organization.UpdatedAt)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Organization{}, fmt.Errorf("organization not found: %w", domain.ErrNotFound)
+		}
 		return models.Organization{}, fmt.Errorf("error getting organization by user ID: %w", err)
 	}
 
@@ -73,6 +81,9 @@ func (P *PGXRepository) GetByOrganizationID(ctx context.Context, organizationID 
 
 	rows, err := P.conn.Query(ctx, query, organizationID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("employees not found: %w", domain.ErrNotFound)
+		}
 		return nil, fmt.Errorf("error getting employees by organization ID: %w", err)
 	}
 	defer rows.Close()

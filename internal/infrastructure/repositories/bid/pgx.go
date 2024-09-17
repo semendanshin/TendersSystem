@@ -2,9 +2,12 @@ package bid
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"tenderSystem/internal/abstraction"
+	"tenderSystem/internal/domain"
 	"tenderSystem/internal/domain/models"
 	"time"
 )
@@ -110,6 +113,9 @@ func (P *PGXRepository) GetByID(ctx context.Context, id models.ID) (models.Bid, 
 
 	err := row.Scan(&bid.ID, &bid.TenderID, &bid.Status, &bid.AuthorType, &bid.AuthorID, &bid.Name, &bid.Description, &bid.Version, &bid.CreatedAt)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Bid{}, fmt.Errorf("bid with ID %s not found: %w", id, domain.ErrNotFound)
+		}
 		return models.Bid{}, err
 	}
 
@@ -238,6 +244,9 @@ func (P *PGXRepository) SetStatus(ctx context.Context, id models.ID, status mode
 
 	err := row.Scan(&bid.ID, &bid.TenderID, &bid.Status, &bid.AuthorType, &bid.AuthorID, &bid.Version)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Bid{}, fmt.Errorf("bid with ID %s not found: %w", id, domain.ErrNotFound)
+		}
 		return models.Bid{}, err
 	}
 
@@ -247,7 +256,7 @@ func (P *PGXRepository) SetStatus(ctx context.Context, id models.ID, status mode
 func (P *PGXRepository) Update(ctx context.Context, id models.ID, data *models.Bid) (models.Bid, error) {
 	const bidUpdateQuery = `
 		UPDATE bid
-		SET сurrent_version_id = $1
+		SET current_version_id = $1
 		WHERE id = $2
 	`
 
@@ -273,6 +282,9 @@ func (P *PGXRepository) Update(ctx context.Context, id models.ID, data *models.B
 	_, err = tx.Exec(ctx, bidUpdateQuery, bidVersionEntity.ID, id)
 	if err != nil {
 		_ = tx.Rollback(ctx)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Bid{}, fmt.Errorf("bid with ID %s not found: %w", id, domain.ErrNotFound)
+		}
 		return models.Bid{}, err
 	}
 
@@ -309,6 +321,9 @@ func (P *PGXRepository) Rollback(ctx context.Context, id models.ID, version int)
 
 	err := row.Scan(&bidVersion.ID, &bidVersion.BidID, &bidVersion.Version, &bidVersion.Name, &bidVersion.Description, &bidVersion.CreatedAt)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Bid{}, fmt.Errorf("bid version with ID %s and version %d not found: %w", id, version, domain.ErrNotFound)
+		}
 		return models.Bid{}, err
 	}
 
@@ -340,7 +355,7 @@ func (P *PGXRepository) Rollback(ctx context.Context, id models.ID, version int)
 func (P *PGXRepository) GetLatestVersionNumber(ctx context.Context, id models.ID) (int, error) {
 	const bidVersionSelectQuery = `
 		SELECT version
-		FROM bid_versions
+		FROM bid_version
 		WHERE bid_id = $1
 		ORDER BY created_at DESC
 		LIMIT 1
@@ -352,6 +367,9 @@ func (P *PGXRepository) GetLatestVersionNumber(ctx context.Context, id models.ID
 
 	err := row.Scan(&version)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, fmt.Errorf("bid version with ID %s not found: %w", id, domain.ErrNotFound)
+		}
 		return 0, err
 	}
 

@@ -31,7 +31,7 @@ func NewPGXRepository(conn *pgx.Conn) *PGXRepository {
 
 func (P *PGXRepository) Create(ctx context.Context, data *models.BidFeedback) (models.BidFeedback, error) {
 	const query = `
-		INSERT INTO bid_feedbacks (id, bid_id, description, author_id)
+		INSERT INTO bid_feedback (id, bid_id, description, author_id)
 		VALUES ($1, $2, $3, $4)
 	`
 
@@ -46,7 +46,7 @@ func (P *PGXRepository) Create(ctx context.Context, data *models.BidFeedback) (m
 func (P *PGXRepository) GetByAuthorID(ctx context.Context, authorID models.ID, options ...abstraction.PaginationOptFunc) ([]models.BidFeedback, error) {
 	const query = `
 		SELECT id, bid_id, description, author_id, created_at
-		FROM bid_feedbacks
+		FROM bid_feedback
 		WHERE author_id = $1
 	`
 

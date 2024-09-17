@@ -2,9 +2,11 @@ package tender
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"tenderSystem/internal/abstraction"
+	"tenderSystem/internal/domain"
 	"tenderSystem/internal/domain/models"
 	"time"
 
@@ -119,6 +121,9 @@ func (P *PGXTenderRepository) GetByID(ctx context.Context, id models.ID) (models
 
 	err := row.Scan(&tenderEntity.ID, &tenderEntity.OrganizationID, &tenderEntity.Status, &tenderEntity.CreatedAt, &tenderEntity.CurrentVersionID, &tenderVersionEntity.Version, &tenderVersionEntity.Name, &tenderVersionEntity.Description, &tenderVersionEntity.ServiceType)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Tender{}, fmt.Errorf("tender with ID %s not found: %w", id, domain.ErrNotFound)
+		}
 		return models.Tender{}, err
 	}
 
@@ -256,6 +261,9 @@ func (P *PGXTenderRepository) GetLatestVersionNumber(ctx context.Context, id mod
 
 	err := row.Scan(&version)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, fmt.Errorf("tender with ID %s not found: %w", id, domain.ErrNotFound)
+		}
 		return 0, err
 	}
 
@@ -278,6 +286,9 @@ func (P *PGXTenderRepository) SetStatus(ctx context.Context, id models.ID, statu
 
 	err := row.Scan(&tenderEntity.OrganizationID, &tenderEntity.CreatedAt, &tenderEntity.CurrentVersionID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Tender{}, fmt.Errorf("tender with ID %s not found: %w", id, domain.ErrNotFound)
+		}
 		return models.Tender{}, err
 	}
 
@@ -335,10 +346,7 @@ func (P *PGXTenderRepository) Update(ctx context.Context, id models.ID, data *mo
 
 	_, err = transaction.Exec(ctx, query, tenderVersionEntity.ID, tenderVersionEntity.TenderID, tenderVersionEntity.Version, tenderVersionEntity.CreatedAt, tenderVersionEntity.Name, tenderVersionEntity.Description, tenderVersionEntity.ServiceType)
 	if err != nil {
-		err := transaction.Rollback(ctx)
-		if err != nil {
-			return models.Tender{}, err
-		}
+		_ = transaction.Rollback(ctx)
 		return models.Tender{}, err
 	}
 
@@ -350,9 +358,9 @@ func (P *PGXTenderRepository) Update(ctx context.Context, id models.ID, data *mo
 
 	_, err = transaction.Exec(ctx, updateQuery, tenderVersionEntity.ID, idUUID)
 	if err != nil {
-		err := transaction.Rollback(ctx)
-		if err != nil {
-			return models.Tender{}, err
+		_ = transaction.Rollback(ctx)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Tender{}, fmt.Errorf("tender with ID %s not found: %w", id, domain.ErrNotFound)
 		}
 		return models.Tender{}, err
 	}
@@ -439,6 +447,9 @@ func (P *PGXTenderRepository) GetSpecificVersion(ctx context.Context, id models.
 
 	err := row.Scan(&tenderVersionEntity.ID, &tenderVersionEntity.TenderID, &tenderVersionEntity.Version, &tenderVersionEntity.CreatedAt, &tenderVersionEntity.Name, &tenderVersionEntity.Description, &tenderVersionEntity.ServiceType)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Tender{}, fmt.Errorf("tender with ID %s and version %d not found: %w", id, version, domain.ErrNotFound)
+		}
 		return models.Tender{}, err
 	}
 
@@ -482,6 +493,9 @@ func (P *PGXTenderRepository) Rollback(ctx context.Context, id models.ID, versio
 
 	_, err = P.conn.Exec(ctx, updateQuery, tenderVersionEntity.ID, idUUID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Tender{}, fmt.Errorf("tender with ID %s not found: %w", id, domain.ErrNotFound)
+		}
 		return models.Tender{}, err
 	}
 
