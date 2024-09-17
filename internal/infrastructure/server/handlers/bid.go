@@ -245,15 +245,21 @@ func (b *BidHandler) ChangeBidStatus(c echo.Context) error {
 }
 
 func (b *BidHandler) EditBid(c echo.Context) error {
-	type query struct {
-		Username    string  `query:"username"`
-		BidID       string  `param:"id"`
-		Name        *string `json:"name;omitempty"`
-		Description *string `json:"description;omitempty"`
+	var body struct {
+		Name        *string `json:"name,omitempty"`
+		Description *string `json:"description,omitempty"`
 	}
 
-	var q query
-	if err := c.Bind(&q); err != nil {
+	var q struct {
+		Username string
+		BidID    string
+	}
+	{
+		q.BidID = c.Param("id")
+		q.Username = c.QueryParam("username")
+	}
+
+	if err := c.Bind(&body); err != nil {
 		return err
 	}
 
@@ -264,8 +270,8 @@ func (b *BidHandler) EditBid(c echo.Context) error {
 
 	var input dto.UpdateBidDTO
 	{
-		input.Name = q.Name
-		input.Description = q.Description
+		input.Name = body.Name
+		input.Description = body.Description
 	}
 
 	bid, err := b.bidUseCase.Update(c.Request().Context(), bidID, q.Username, &input)

@@ -321,7 +321,7 @@ func (P *PGXTenderRepository) Update(ctx context.Context, id models.ID, data *mo
 	tenderVersionEntity := tenderVersion{
 		ID:          uuid.New(),
 		TenderID:    idUUID,
-		Version:     data.Version + 1,
+		Version:     data.Version,
 		CreatedAt:   time.Now(),
 		Name:        data.Name,
 		Description: data.Description,

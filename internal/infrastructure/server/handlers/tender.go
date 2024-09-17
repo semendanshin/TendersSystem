@@ -54,9 +54,6 @@ func (t *TenderHandler) Register(g *echo.Group) {
 }
 
 func (t *TenderHandler) GetTenders(c echo.Context) error {
-	// limit, offset - int (optional)
-	// serviceType - array of strings (optional)
-
 	type query struct {
 		Limit       int      `query:"limit"`
 		Offset      int      `query:"offset"`
@@ -230,30 +227,38 @@ func (t *TenderHandler) ChangeTenderStatus(c echo.Context) error {
 }
 
 func (t *TenderHandler) EditTender(c echo.Context) error {
-	type query struct {
-		Username    string  `query:"username"`
-		TenderID    string  `param:"id"`
-		Name        *string `json:"name;omitempty"`
-		Description *string `json:"description;omitempty"`
-		ServiceType *string `json:"serviceType;omitempty"`
+	var b struct {
+		Name        *string `json:"name,omitempty"`
+		Description *string `json:"description,omitempty"`
+		ServiceType *string `json:"serviceType,omitempty"`
 	}
 
-	var q query
-	if err := c.Bind(&q); err != nil {
-		return c.JSON(400, err)
+	var query struct {
+		Username string
+		TenderID string
+	}
+	{
+		query.Username = c.QueryParam("username")
+		query.TenderID = c.Param("id")
 	}
 
-	tenderID, err := models.ParseID(q.TenderID)
+	if err := c.Bind(&b); err != nil {
+		return fmt.Errorf("failed to bind query: %w", err)
+	}
+
+	tenderID, err := models.ParseID(query.TenderID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse tender id: %w", err)
 	}
 
 	var input dto.UpdateTenderDTO
 	{
-		input.Name = q.Name
-		input.Description = q.Description
-		if q.ServiceType != nil {
-			serviceType, err := models.NewTenderType(strings.ToLower(*q.ServiceType))
+		input.Name = b.Name
+
+		input.Description = b.Description
+
+		if b.ServiceType != nil {
+			serviceType, err := models.NewTenderType(strings.ToLower(*b.ServiceType))
 			if err != nil {
 				return err
 			}
@@ -261,7 +266,7 @@ func (t *TenderHandler) EditTender(c echo.Context) error {
 		}
 	}
 
-	tender, err := t.tenderUseCase.Update(c.Request().Context(), tenderID, q.Username, &input)
+	tender, err := t.tenderUseCase.Update(c.Request().Context(), tenderID, query.Username, &input)
 	if err != nil {
 		return err
 	}
