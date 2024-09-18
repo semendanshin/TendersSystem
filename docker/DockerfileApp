@@ -11,7 +11,7 @@ ARG TARGETARCH
 
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,target=. \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/server ./cmd/app
+    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/api ./cmd/api
 
 FROM alpine:latest AS final
 
@@ -33,6 +33,6 @@ RUN adduser \
     appuser
 USER appuser
 
-COPY --from=build /bin/server /bin/
+COPY --from=build /bin/api /bin/
 
-ENTRYPOINT [ "/bin/server" ]
+ENTRYPOINT [ "/bin/api" ]
